@@ -40,7 +40,7 @@
 | Метрика | Значение | Источник |
 | :--- | :--- | :--- |
 | **Monthly Active Users (MAU)** | 60 млн | Similarweb: оценка аудитории 2gis.ru ([1](https://www.similarweb.com/ru/website/2gis.ru/#overview)) |
-| **Daily Active Users (DAU)** | 20 млн | **Допущение** (stickiness ≈ 30% от MAU ([10](https://americanchase.com/mobile-app-kpi-metrics/?utm_source=chatgpt.com))). Прямой публичной DAU-метрики 2ГИС нет в открытом доступе |
+| **Daily Active Users (DAU)** | 20 млн | **Допущение** (stickiness ≈ 30% от MAU ([10](https://americanchase.com/mobile-app-kpi-metrics/))). Прямой публичной DAU-метрики 2ГИС нет в открытом доступе |
 | **Среднее количество открытий карты** | ≈1.7/день | Google Maps: ~50 сессий/мес => 50/30≈1.7 сессии/день ([2](https://localzen.com/blog/google-maps-statistics-and-interesting-facts/)) |
 | **Поисковые запросы (всего)** | >20.5 млн/сут | “processing more than 20.5 million search queries daily” (company data, 2021) ([3](https://en.wikipedia.org/wiki/2GIS)) |
 | **Среднее количество поисковых запросов на пользователя** | ≈1.0/день | **Вывод:** 20.5 млн поисков/сут ÷ 20 млн DAU ≈ 1.0/польз/день. (по строкам выше) |
@@ -70,7 +70,7 @@
 
 ### Сетевой трафик
 k = Peak / Average
-Пиковый час составляет примерно 8.4% суточного трафика. [9](https://www.precisiontrafficsafety.com/solutions/traffic-studies/?utm_source=chatgpt.com)
+Пиковый час составляет примерно 8.4% суточного трафика. [9](https://www.precisiontrafficsafety.com/solutions/traffic-studies/)
 Cредняя часовая нагрузка равна 1/24 ≈ 4.17%.
 k = 8.4/4.17 ≈ 2.0
 При расчёте используется коэффициент суточной неравномерности **k = 2** для определения пиковой нагрузки.
@@ -216,6 +216,6 @@ Anycast используем там, где это действительно у
 6. [Вики яндекс карт 2016 год](https://en.wikipedia.org/wiki/Yandex_Maps)
 7. [Статистика яндекс карт 2026 год](https://www.comss.ru/page.php?id=18998)
 8. [Официальная статистика 2ГИС](https://help.2gis.ru/question/offline-maps)
-9. [Traffic Studies](https://www.precisiontrafficsafety.com/solutions/traffic-studies/?utm_source=chatgpt.com)
-10. [25 ключевых показателей эффективности мобильных приложений](https://americanchase.com/mobile-app-kpi-metrics/?utm_source=chatgpt.com)
+9. [Traffic Studies](https://www.precisiontrafficsafety.com/solutions/traffic-studies/)
+10. [25 ключевых показателей эффективности мобильных приложений](https://americanchase.com/mobile-app-kpi-metrics/)
 
