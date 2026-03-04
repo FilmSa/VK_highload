@@ -45,7 +45,7 @@
 | **Поисковые запросы (всего)** | >20.5 млн/сут | “processing more than 20.5 million search queries daily” (company data, 2021) ([3](https://en.wikipedia.org/wiki/2GIS)) |
 | **Среднее количество поисковых запросов на пользователя** | ≈1.0/день | **Вывод:** 20.5 млн поисков/сут ÷ 20 млн DAU ≈ 1.0/польз/день. (по строкам выше) |
 | **Среднее количество просмотров карточек организаций** | ≈1.17/день | **Вывод:** ~1.0 поиска/день × 1.17 клика/поиск [clickthrough](https://www.cs.cornell.edu/people/tj/publications/joachims_02b.pdf). Joachims: “average number of clicks per query is 1.17” ([4](https://www.cs.cornell.edu/~tj/publications/joachims_02b.pdf)) |
-| **Среднее количество построений маршрута** | 0.7/день | Небольшое допущение: на момент 2016 года в месяц на пользователя было 4 построений маршрута [5](https://yandex.ru/company/researches/2016/ya_walk)  20 млн пользователей в месяц на момент 2016года [6](https://en.wikipedia.org/wiki/Yandex_Maps) 95 в месяц на момент 2026 года. Рост в 475% Применим его к построению маршрутов и получим 19. Далее поделим 19/30≈0.7 [7](https://www.comss.ru/page.php?id=18998)|
+| **Среднее количество построений маршрута** | 0.7/день | Небольшое допущение: на момент 2016 года в месяц на пользователя было 4 построений маршрута ([5](https://yandex.ru/company/researches/2016/ya_walk))  20 млн пользователей в месяц на момент 2016года ([6](https://en.wikipedia.org/wiki/Yandex_Maps)) 95 в месяц на момент 2026 года. Рост в 475% Применим его к построению маршрутов и получим 19. Далее поделим 19/30≈0.7 ([7](https://www.comss.ru/page.php?id=18998))|
 | **Использование тематических слоёв (пробки/транспорт)** | 0.5/день | **Допущение** (публичной метрики “traffic layer usage per user/day” нет) Цифра взята из личного опыта|
 | **Загрузка офлайн-карт** | 0.02/день | **Допущение:** ~1 загрузка собственного города + обновление раз в 50 дней (редкое событие) |
 | **Размер офлайн-карт** | 30 МБ - 1 ГБ| Официальная справка 2ГИС: “Москва до 1 ГБ… небольшой город 30–50 МБ” ([8](https://help.2gis.ru/question/offline-maps)) |
@@ -57,7 +57,7 @@
 ## Сслыки на источники
 1. [Аналитика трафика 2ГИС](https://www.similarweb.com/ru/website/2gis.ru/#overview)
 2. [37 Google Maps Statistics and Interesting Facts](https://localzen.com/blog/google-maps-statistics-and-interesting-facts/))
-3. [2ГИС wiki)]([https://developer.android.com/topic/performance/vitals](https://en.wikipedia.org/wiki/2GIS)))
+3. [2ГИС wiki]([https://developer.android.com/topic/performance/vitals](https://en.wikipedia.org/wiki/2GIS))
 4. [Evaluating Retrieval Performance using Clickthrough Data - статья про clickthrough](https://www.cs.cornell.edu/~tj/publications/joachims_02b.pdf)
 5. [Исследование Яндекс карт лето 2016](https://yandex.ru/company/researches/2016/ya_walk)
 6. [Вики яндекс карт 2016 год](https://en.wikipedia.org/wiki/Yandex_Maps)
