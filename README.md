@@ -69,6 +69,10 @@
 ---
 
 ### Сетевой трафик
+k = Peak / Average
+Пиковый час составляет примерно 8.4% суточного трафика. [9](https://www.precisiontrafficsafety.com/solutions/traffic-studies/?utm_source=chatgpt.com)
+Cредняя часовая нагрузка равна 1/24 ≈ 4.17%.
+k = 8.4/4.17 ≈ 2.0
 При расчёте используется коэффициент суточной неравномерности **k = 2** для определения пиковой нагрузки.
 
 | Тип трафика | Суточный объём (ТБ/сут) | Средний трафик (Гбит/с) | Пиковый трафик (k=2) |
@@ -109,5 +113,5 @@ RPS рассчитывается по формуле:
 6. [Вики яндекс карт 2016 год](https://en.wikipedia.org/wiki/Yandex_Maps)
 7. [Статистика яндекс карт 2026 год](https://www.comss.ru/page.php?id=18998)
 8. [Официальная статистика 2ГИС](https://help.2gis.ru/question/offline-maps)
-   
+9. [Traffic Studies](https://www.precisiontrafficsafety.com/solutions/traffic-studies/?utm_source=chatgpt.com)
 
