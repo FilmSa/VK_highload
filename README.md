@@ -107,7 +107,7 @@ RPS рассчитывается по формуле:
 ## Сслыки на источники
 1. [Аналитика трафика 2ГИС](https://www.similarweb.com/ru/website/2gis.ru/#overview)
 2. [37 Google Maps Statistics and Interesting Facts](https://localzen.com/blog/google-maps-statistics-and-interesting-facts/)
-3. [2ГИС wiki]([https://developer.android.com/topic/performance/vitals](https://en.wikipedia.org/wiki/2GIS))
+3. [2ГИС wiki](https://developer.android.com/topic/performance/vitals](https://en.wikipedia.org/wiki/2GIS))
 4. [Evaluating Retrieval Performance using Clickthrough Data - статья про clickthrough](https://www.cs.cornell.edu/~tj/publications/joachims_02b.pdf)
 5. [Исследование Яндекс карт лето 2016](https://yandex.ru/company/researches/2016/ya_walk)
 6. [Вики яндекс карт 2016 год](https://en.wikipedia.org/wiki/Yandex_Maps)
