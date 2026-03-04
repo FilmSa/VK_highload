@@ -40,7 +40,7 @@
 | Метрика | Значение | Источник |
 | :--- | :--- | :--- |
 | **Monthly Active Users (MAU)** | 60 млн | Similarweb: оценка аудитории 2gis.ru ([1](https://www.similarweb.com/ru/website/2gis.ru/#overview)) |
-| **Daily Active Users (DAU)** | 20 млн | **Допущение** (stickiness ≈ 30% от MAU). Прямой публичной DAU-метрики 2ГИС нет в открытом доступе |
+| **Daily Active Users (DAU)** | 20 млн | **Допущение** (stickiness ≈ 30% от MAU ([10](https://americanchase.com/mobile-app-kpi-metrics/?utm_source=chatgpt.com))). Прямой публичной DAU-метрики 2ГИС нет в открытом доступе |
 | **Среднее количество открытий карты** | ≈1.7/день | Google Maps: ~50 сессий/мес => 50/30≈1.7 сессии/день ([2](https://localzen.com/blog/google-maps-statistics-and-interesting-facts/)) |
 | **Поисковые запросы (всего)** | >20.5 млн/сут | “processing more than 20.5 million search queries daily” (company data, 2021) ([3](https://en.wikipedia.org/wiki/2GIS)) |
 | **Среднее количество поисковых запросов на пользователя** | ≈1.0/день | **Вывод:** 20.5 млн поисков/сут ÷ 20 млн DAU ≈ 1.0/польз/день. (по строкам выше) |
@@ -217,4 +217,5 @@ Anycast используем там, где это действительно у
 7. [Статистика яндекс карт 2026 год](https://www.comss.ru/page.php?id=18998)
 8. [Официальная статистика 2ГИС](https://help.2gis.ru/question/offline-maps)
 9. [Traffic Studies](https://www.precisiontrafficsafety.com/solutions/traffic-studies/?utm_source=chatgpt.com)
+10. [25 ключевых показателей эффективности мобильных приложений](https://americanchase.com/mobile-app-kpi-metrics/?utm_source=chatgpt.com)
 
