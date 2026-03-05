@@ -171,42 +171,19 @@ RPS рассчитывается по формуле:,
 
 ## 3.4 Схема DNS балансировки
 
-Используем **GeoDNS / latency-based DNS** для `api` и `route`:
-
-- пользователь из РФ => Москва/Новосибирск (ближайший/наименее загруженный)
-- пользователь из Казахстана => Алматы
-- остальные страны => Франкфурт
-
-- TTL 30–60 секунд (быстрее переключение при сбоях)
-- DNS отдаёт **региональный L7 Load Balancer** (Ingress) каждого ДЦ
+Для балансировки пользовательского трафика используется **Geo-Based DNS**.  
+DNS определяет регион пользователя по IP-адресу и направляет запрос в ближайший дата-центр.
 
 ---
 
 ## 3.5 Схема Anycast балансировки
 
-Anycast используем там, где это действительно уместно:
+**Anycast** — это метод маршрутизации, при котором один IP-адрес объявляется из нескольких точек сети.
 
-- `tiles.*` и `cdn.*` - через **CDN с Anycast**, чтобы:
-  - пользователь всегда попадал на ближайшую edge-точку,
-  - получить базовую DDoS-устойчивость.
+Маршрутизация интернета автоматически направляет пользователя к ближайшему узлу.
+Этот механизм активно используется CDN-сетями для доставки картографических тайлов и статических данных.
 
-`api/route` можно оставить на GeoDNS т.к. эти запросы нельзя кэшировать т.к. они динамические запросы.
-
----
-
-## 3.6 Механизм регулировки трафика между ДЦ
-
-1) **Health-check + автоматический failover**
-- если Москва деградирует => DNS вес Москвы уменьшается, трафик уходит в Новосибирск/Франкфурт
-
-2) **Weighted routing**
-- обычный режим: Москва 65%, Новосибирск 30.61%, Алматы 0.57%, Франкфурт 3.82%
-- аварийный режим: Москва 0%, Новосибирск 90%+, Франкфурт остаток
-
-3) **CDN origin failover для больших файлов**
-- офлайн-пакеты: origin Москва + резерв Новосибирск
-- CDN сам переключает origin при недоступности
-
+[“The anycast IP address is used to distribute traffic amongst Cloudflare's network, which protects your website or app from DDoS ↗ and other attacks, while optimizing site speed.”](https://developers.cloudflare.com/fundamentals/concepts/how-cloudflare-works/)
 ## Сслыки на источники
 1. [Аналитика трафика 2ГИС](https://www.similarweb.com/ru/website/2gis.ru/#overview)
 2. [37 Google Maps Statistics and Interesting Facts](https://localzen.com/blog/google-maps-statistics-and-interesting-facts/)
@@ -218,4 +195,5 @@ Anycast используем там, где это действительно у
 8. [Официальная статистика 2ГИС](https://help.2gis.ru/question/offline-maps)
 9. [Traffic Studies](https://www.precisiontrafficsafety.com/solutions/traffic-studies/)
 10. [25 ключевых показателей эффективности мобильных приложений](https://americanchase.com/mobile-app-kpi-metrics/)
+11. [How Cloudflare DNS works](https://developers.cloudflare.com/fundamentals/concepts/how-cloudflare-works/)
 
