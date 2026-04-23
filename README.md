@@ -355,6 +355,22 @@ RPS рассчитывается по формуле:,
 | **Leaflet / Mapbox GL**  | Frontend (карта)                 | Отображение тайлов и слоёв                                                                                                          |
 | **Kotlin / Swift**       | Mobile                           | Нативные мобильные приложения                                                                                                       |
 
+# 9 Обеспечение надёжности
+
+| Компонент           | Резервирование                     | Технологии                       |
+| ------------------- | ---------------------------------- | -------------------------------- |
+| **L4 (LVS)**        | N × 2 (2 активных + 2 резервных)   | LVS + Keepalived (VRRP)          |
+| **L7 (NGINX)**      | N + 1 (5 рабочих + 1 резерв)       | NGINX + health-check             |
+| **Kubernetes**      | Автоперезапуск + масштабирование   | Kubernetes (HPA, self-healing)   |
+| **Backend сервисы** | Несколько инстансов + балансировка | Go + Kubernetes                  |
+| **PostgreSQL**      | Репликация + бэкапы (WAL)          | PostgreSQL + WAL + pg_basebackup |
+| **Elasticsearch**   | Реплики шардов                     | Elasticsearch (replica shards)   |
+| **S3 (тайлы)**      | Репликация между регионами         | S3 (cross-region replication)    |
+| **CDN**             | Кэширование на edge                | CDN (edge caching)               |
+| **Tile Render**     | Несколько инстансов                | Mapnik + Kubernetes              |
+| **Мониторинг**      | Сбор и визуализация метрик         | Prometheus + Grafana             |
+
+
 # 10. Схема проекта
 
 ![alt text](2Gis.png)
