@@ -364,8 +364,7 @@ RPS рассчитывается по формуле:,
 | **Backend сервисы** | Несколько инстансов + балансировка | Go + Kubernetes                  |
 | **PostgreSQL**      | Репликация + бэкапы (WAL)          | PostgreSQL + WAL + pg_basebackup |
 | **Elasticsearch**   | Реплики шардов                     | Elasticsearch (replica shards)   |
-| **MinIO (тайлы)** | Active-Active репликация между кластерами | MinIO Bucket Replication + Erasure Coding |
-| **CDN**             | Кэширование на edge                | CDN (edge caching)               |
+MinIO distributed mode + Erasure Coding| **CDN**             | Кэширование на edge                | CDN (edge caching)               |
 | **Tile Render**     | Несколько инстансов                | Mapnik + Kubernetes              |
 | **Мониторинг**      | Сбор и визуализация метрик         | Prometheus + Grafana             |
 
