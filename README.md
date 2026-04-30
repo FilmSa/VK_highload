@@ -343,7 +343,7 @@ RPS рассчитывается по формуле:,
 | **Mapnik**               | Backend (рендеринг тайлов)       | Основной движок рендеринга карт                                                                                                     |
 | **PostgreSQL + PostGIS** | Хранение геоданных               | Хранение дорог, зданий, организаций                                                                                                 |
 | **Go (Golang)**          | Backend                          | Высокая производительность, эффективная работа с concurrency                                                                        |
-| **S3**                   | Хранение тайлов                  | Долговременное хранение сгенерированных тайлов                                                                                      |
+| **MinIO (S3-compatible)** | Хранение тайлов | Распределённое объектное хранилище с поддержкой S3 API; используется как origin для CDN  |
 | **CDN**                  | Доставка тайлов                  | Раздача тайлов с edge-серверов -> снижение latency и нагрузки                                                                        |
 | **Nginx**                | L7 балансировка                  | Reverse proxy, маршрутизация `/api`, `/tiles`, кэширование                                                                          |
 | **LVS**                  | L4 балансировка                  | Быстрое распределение TCP-трафика                                                                                                   |
@@ -364,7 +364,7 @@ RPS рассчитывается по формуле:,
 | **Backend сервисы** | Несколько инстансов + балансировка | Go + Kubernetes                  |
 | **PostgreSQL**      | Репликация + бэкапы (WAL)          | PostgreSQL + WAL + pg_basebackup |
 | **Elasticsearch**   | Реплики шардов                     | Elasticsearch (replica shards)   |
-| **S3 (тайлы)**      | Репликация между регионами         | S3 (cross-region replication)    |
+| **MinIO (тайлы)** | Active-Active репликация между кластерами | MinIO Bucket Replication + Erasure Coding |
 | **CDN**             | Кэширование на edge                | CDN (edge caching)               |
 | **Tile Render**     | Несколько инстансов                | Mapnik + Kubernetes              |
 | **Мониторинг**      | Сбор и визуализация метрик         | Prometheus + Grafana             |
