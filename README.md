@@ -364,10 +364,12 @@ RPS рассчитывается по формуле:,
 | **Backend сервисы** | Несколько инстансов + балансировка | Go + Kubernetes                  |
 | **PostgreSQL**      | Репликация + бэкапы (WAL)          | PostgreSQL + WAL + pg_basebackup |
 | **Elasticsearch**   | Реплики шардов                     | Elasticsearch (replica shards)   |
-| **MinIO (тайлы)**   | Отказоустойчивость избыточностью   | bucket replication + Erasure Coding |
+| **MinIO (тайлы)**   | N+M (избыточность через Erasure Coding)  | MinIO Distributed + Erasure Coding |
 | **Tile Render**     | Несколько инстансов                | Mapnik + Kubernetes              |
 | **Мониторинг**      | Сбор и визуализация метрик         | Prometheus + Grafana             |
 
+MinIO Distributed - данные распределяются между несколькими storage-узлами.
+Erasure Coding - объект разбивается на части и хранится с избыточностью. Даже если часть дисков или серверов выйдет из строя, данные можно восстановить.
 
 # 10. Схема проекта
 
