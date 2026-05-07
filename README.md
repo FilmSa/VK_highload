@@ -388,6 +388,160 @@ Erasure Coding - объект разбивается на части и хран
 | **Prometheus**          | Собирает метрики (RPS, latency, ошибки, нагрузка)                                                                                                                         |
 | **Grafana**             | Визуализирует метрики и позволяет отслеживать состояние системы                                                                                                           |
 
+# 11. Расчет ресурсов
+
+# 11. Список серверов
+
+## 11.1 Выбор модели размещения
+
+Для проекта используется гибридная модель размещения в российском сегменте.
+
+Stateless backend-сервисы размещаются в Kubernetes, так как проект использует Kubernetes для горизонтального масштабирования backend-сервисов. Stateful-компоненты (PostgreSQL/PostGIS, Elasticsearch, MinIO) размещаются на отдельных VM, поскольку базы данных и object storage требуют постоянного хранения данных и плохо подходят для плотной контейнеризации.  
+Используемые технологии проекта: Go, Kubernetes, PostgreSQL + PostGIS, Elasticsearch, MinIO, NGINX, LVS, Prometheus + Grafana.
+
+| Компонент | Модель размещения | Причина |
+|---|---|---|
+| Backend API | Kubernetes | Горизонтальное масштабирование |
+| Routing Service | Kubernetes | Несколько инстансов и HPA |
+| Tile Render Service | Kubernetes | Масштабирование генерации тайлов |
+| PostgreSQL/PostGIS | Отдельные VM | Stateful workload |
+| Elasticsearch | Отдельные VM | Search index |
+| MinIO | Отдельные VM | Object Storage |
+| L4 LVS | Отдельные VM | Внешняя балансировка |
+| L7 NGINX | Отдельные VM | HTTPS termination |
+| Monitoring | VM | Prometheus + Grafana |
+
+### Выбранные российские провайдеры
+
+| Провайдер | Использование |
+|---|---|
+| Selectel | Основные VM и Kubernetes |
+| Yandex Cloud CDN | CDN для тайлов |
+| VK Cloud | Резервные VM |
+
+Выбор обусловлен тем, что провайдеры расположены в РФ, поддерживают Kubernetes и VM, а также обеспечивают низкую задержку внутри российского сегмента.
+
+---
+
+## 11.2 Список серверов
+
+Расчёт серверов выполняется для пикового RPS:
+
+| Тип нагрузки | Peak RPS |
+|---|---:|
+| Тайлы | 9 444 |
+| Поиск | 462 |
+| Карточки организаций | 542 |
+| Маршруты | 92 |
+| Фоновые обновления навигации | 2 314 |
+| Тематические слои | 232 |
+| **Итого** | **13 086 RPS** |
+
+Также учитывается пиковый сетевой трафик:
+
+```text
+102.6 Гбит/с
+```
+## Таблица серверов
+
+| Группа серверов          | Кол-во | Конфигурация                | Размещённые сервисы               | Обоснование                                   |
+| ------------------------ | -----: | --------------------------- | --------------------------------- | --------------------------------------------- |
+| L4 LVS                   |      4 | 4 vCPU, 8 GB RAM, 100GbE    | LVS + Keepalived                  | 2 активных + 2 резервных сервера по схеме N×2 |
+| L7 NGINX                 |      6 | 8 vCPU, 16 GB RAM, 25GbE    | NGINX reverse proxy               | 5 рабочих + 1 резервный сервер                |
+| Kubernetes Worker        |      4 | 32 vCPU, 64 GB RAM          | Backend API, Routing, Tile Render | Основная backend-нагрузка                     |
+| Kubernetes Control Plane |      3 | 4 vCPU, 8 GB RAM            | Kubernetes master nodes           | Минимальный HA-кластер Kubernetes             |
+| PostgreSQL/PostGIS       |      3 | 12 vCPU, 32 GB RAM, NVMe    | PostgreSQL + PostGIS + PgBouncer  | 1 primary + 2 replica                         |
+| Elasticsearch            |      3 | 8 vCPU, 32 GB RAM, NVMe     | Elasticsearch                     | replica shards                                |
+| MinIO                    |      4 | 8 vCPU, 16 GB RAM, HDD/NVMe | MinIO Distributed                 | 2 data + 2 parity                             |
+| Monitoring               |      2 | 4 vCPU, 8 GB RAM            | Prometheus + Grafana              | monitoring + standby                          |
+
+## Распределение сервисов по Kubernetes worker-node
+
+| Сервер       | Сервисы                                |
+| ------------ | -------------------------------------- |
+| worker-1 | map-query-service, places-data-service |
+| worker-2 | auth-service, api-gateway              |
+| worker-3 | routing-service                        |
+| worker-4 | tile-render-service, metrics-exporters |
+
+## 11.3 Контейнеры Kubernetes и аллокация ресурсов
+
+requests — гарантированные ресурсы;
+limits — максимальные ресурсы.
+
+| Контейнер           | Replicas | CPU request | CPU limit | RAM request | RAM limit | Назначение             |
+| ------------------- | -------: | ----------: | --------: | ----------: | --------: | ---------------------- |
+| map-query-service   |        2 |    0.5 core |    1 core |      512 MB |      1 GB | Поиск организаций      |
+| places-data-service |        2 |    0.5 core |    1 core |      512 MB |      1 GB | Карточки организаций   |
+| auth-service        |        2 |   0.25 core |  0.5 core |      256 MB |    512 MB | JWT и авторизация      |
+| routing-service     |        2 |     4 cores |   8 cores |        8 GB |     12 GB | Маршрутизация          |
+| tile-render-service |        2 |     2 cores |   4 cores |        4 GB |      8 GB | Рендеринг тайлов       |
+| api-gateway         |        2 |   0.25 core |  0.5 core |      256 MB |    512 MB | Внутренний API gateway |
+| prometheus-exporter |        4 |    0.1 core |  0.2 core |      128 MB |    256 MB | Метрики                |
+
+Суммарное потребление Kubernetes
+
+CPU requests
+```
+2×0.5 + 2×0.5 + 2×0.25 + 2×4 + 2×2 + 2×0.25 + 4×0.1 = 15.4 CPU
+```
+RAM requests
+```
+2×512MB + 2×512MB + 2×256MB + 2×8GB + 2×4GB + 2×256MB + 4×128MB ≈ 27.5 GB RAM
+```
+
+4 worker-node по 32 vCPU и 64 GB RAM дают:
+```
+128 vCPU
+256 GB RAM
+```
+## 11.4 Таблица необходимого оборудования
+| Тип серверов       |          Кол-во |    CPU всего |      RAM всего | Назначение               |
+| ------------------ | --------------: | -----------: | -------------: | ------------------------ |
+| L4 LVS             |               4 |      16 vCPU |          32 GB | TCP балансировка         |
+| L7 NGINX           |               6 |      48 vCPU |          96 GB | HTTPS и reverse proxy    |
+| Kubernetes Worker  |               4 |     128 vCPU |         256 GB | Backend Kubernetes       |
+| Kubernetes Master  |               3 |      12 vCPU |          24 GB | Kubernetes control-plane |
+| PostgreSQL/PostGIS |               3 |      36 vCPU |          96 GB | Основная БД              |
+| Elasticsearch      |               3 |      24 vCPU |          96 GB | Search cluster           |
+| MinIO              |               4 |      32 vCPU |          64 GB | Object Storage           |
+| Monitoring         |               2 |       8 vCPU |          16 GB | Prometheus + Grafana     |
+| **Итого**          | **29 серверов** | **304 vCPU** | **680 GB RAM** | -                        |
+
+
+## 11.5 Расчёт месячной стоимости
+| Ресурс    |           Цена |
+| --------- | -------------: |
+| 1 vCPU    |  900 ₽ / месяц |
+| 1 GB RAM  |  250 ₽ / месяц |
+| 1 TB NVMe | 3500 ₽ / месяц |
+Формула расчета:
+```
+Стоимость = CPU × 900 + RAM × 250 + Storage
+```
+Источник стоимости и формулы: [Правила тарификации для Compute Cloud](https://yandex.cloud/ru/docs/compute/pricing)
+
+## Таблица стоимости
+| Группа серверов    | CPU |    RAM |        Storage | Стоимость |
+| ------------------ | --: | -----: | -------------: | --------: |
+| L4 LVS             |  16 |  32 GB |              — |  22 400 ₽ |
+| L7 NGINX           |  48 |  96 GB |              — |  67 200 ₽ |
+| Kubernetes Worker  | 128 | 256 GB |   4×500GB NVMe | 179 200 ₽ |
+| Kubernetes Master  |  12 |  24 GB |              — |  16 800 ₽ |
+| PostgreSQL/PostGIS |  36 |  96 GB |      3 TB NVMe |  64 500 ₽ |
+| Elasticsearch      |  24 |  96 GB |      3 TB NVMe |  55 200 ₽ |
+| MinIO              |  32 |  64 GB | 20 TB HDD/NVMe |  60 800 ₽ |
+| Monitoring         |   8 |  16 GB |      1 TB NVMe |  11 200 ₽ |
+
+## 11.6 Итоговая стоимость
+| Показатель         |            Значение |
+| ------------------ | ------------------: |
+| Всего серверов     |                  29 |
+| Всего CPU          |            304 vCPU |
+| Всего RAM          |              680 GB |
+| Месячная стоимость | ≈ 477 300 ₽ / месяц |
+
+
 
 
 ## Сслыки на источники
@@ -402,4 +556,5 @@ Erasure Coding - объект разбивается на части и хран
 9. [Traffic Studies](https://www.precisiontrafficsafety.com/solutions/traffic-studies/)
 10. [25 ключевых показателей эффективности мобильных приложений](https://americanchase.com/mobile-app-kpi-metrics/)
 11. [Time to travel](https://www.census.gov/topics/employment/commuting/guidance/acs-1yr.html)
+12. [Правила тарификации для Compute Cloud](https://yandex.cloud/ru/docs/compute/pricing)
 
