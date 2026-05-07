@@ -456,50 +456,68 @@ Erasure Coding - объект разбивается на части и хран
 | worker-4 | tile-render-service|
 
  metrics-exporters лежит в каждом worker
+
 ## 11.3 Контейнеры Kubernetes и аллокация ресурсов
 
-requests — гарантированные ресурсы;
+requests — гарантированные ресурсы;  
 limits — максимальные ресурсы.
 
-| Контейнер           | Replicas | CPU request | CPU limit | RAM request | RAM limit | Назначение             |
-| ------------------- | -------: | ----------: | --------: | ----------: | --------: | ---------------------- |
-| map-query-service   |        2 |    0.5 core |    1 core |      512 MB |      1 GB | Поиск организаций      |
-| places-data-service |        2 |    0.5 core |    1 core |      512 MB |      1 GB | Карточки организаций   |
-| auth-service        |        2 |   0.25 core |  0.5 core |      256 MB |    512 MB | JWT и авторизация      |
-| routing-service     |        2 |     4 cores |   8 cores |        8 GB |     12 GB | Маршрутизация          |
-| tile-render-service |        2 |     2 cores |   4 cores |        4 GB |      8 GB | Рендеринг тайлов       |
-| api-gateway         |        2 |   0.25 core |  0.5 core |      256 MB |    512 MB | Внутренний API gateway |
-| prometheus-exporter |        4 |    0.1 core |  0.2 core |      128 MB |    256 MB | Метрики                |
+| Контейнер | Replicas | CPU request | CPU limit | RAM request | RAM limit | Назначение |
+|---|---:|---:|---:|---:|---:|---|
+| map-query-service | 2 | 0.5 core | 1 core | 512 MB | 1 GB | Поиск организаций |
+| places-data-service | 2 | 0.5 core | 1 core | 512 MB | 1 GB | Карточки организаций |
+| auth-service | 2 | 0.25 core | 0.5 core | 256 MB | 512 MB | JWT и авторизация |
+| routing-service | 2 | 4 cores | 8 cores | 8 GB | 12 GB | Маршрутизация |
+| tile-render-service | 2 | 1 core | 2 cores | 2 GB | 4 GB | Рендеринг тайлов |
+| api-gateway | 2 | 0.25 core | 0.5 core | 256 MB | 512 MB | Внутренний API gateway |
+| prometheus-exporter | 4 | 0.1 core | 0.2 core | 128 MB | 256 MB | Метрики |
 
-Суммарное потребление Kubernetes
+### Суммарное потребление Kubernetes
 
-CPU requests
+CPU requests:
 ```
-2×0.5 + 2×0.5 + 2×0.25 + 2×4 + 2×2 + 2×0.25 + 4×0.1 = 15.4 CPU
+2×0.5 + 2×0.5 + 2×0.25 + 2×4 + 2×1 + 2×0.25 + 4×0.1
+= 13.4 CPU
+````
+
+RAM requests:
+
 ```
-RAM requests
-```
-2×512MB + 2×512MB + 2×256MB + 2×8GB + 2×4GB + 2×256MB + 4×128MB ≈ 27.5 GB RAM
+2×512MB + 2×512MB + 2×256MB + 2×8GB + 2×2GB + 2×256MB + 4×128MB
+≈ 23.5 GB RAM
 ```
 
-4 worker-node по 32 vCPU и 64 GB RAM дают:
+используются 3 worker-node по:
+
 ```
-128 vCPU
-256 GB RAM
+16 vCPU
+32 GB RAM
 ```
+
+Суммарные ресурсы Kubernetes Worker:
+
+```
+48 vCPU
+96 GB RAM
+```
+
+---
+
 ## 11.4 Таблица необходимого оборудования
-| Тип серверов       |          Кол-во |    CPU всего |      RAM всего | Назначение               |
-| ------------------ | --------------: | -----------: | -------------: | ------------------------ |
-| L4 LVS             |               4 |      16 vCPU |          32 GB | TCP балансировка         |
-| L7 NGINX           |               6 |      48 vCPU |          96 GB | HTTPS и reverse proxy    |
-| Kubernetes Worker  |               4 |     128 vCPU |         256 GB | Backend Kubernetes       |
-| Kubernetes Master  |               3 |      12 vCPU |          24 GB | Kubernetes control-plane |
-| PostgreSQL/PostGIS |               3 |      36 vCPU |          96 GB | Основная БД              |
-| Elasticsearch      |               3 |      24 vCPU |          96 GB | Search cluster           |
-| MinIO              |               4 |      32 vCPU |          64 GB | Object Storage           |
-| Monitoring         |               2 |       8 vCPU |          16 GB | Prometheus + Grafana     |
-| **Итого**          | **29 серверов** | **304 vCPU** | **680 GB RAM** | -                        |
 
+| Тип серверов             |          Кол-во |    CPU всего |      RAM всего | Назначение               |
+| ------------------------ | --------------: | -----------: | -------------: | ------------------------ |
+| L4 LVS                   |               4 |      16 vCPU |          32 GB | TCP балансировка         |
+| L7 NGINX                 |               6 |      48 vCPU |          96 GB | HTTPS и reverse proxy    |
+| Kubernetes Worker        |               3 |      48 vCPU |          96 GB | Backend Kubernetes       |
+| Kubernetes Control Plane |               3 |      12 vCPU |          24 GB | Kubernetes control-plane |
+| PostgreSQL/PostGIS       |               3 |      24 vCPU |          48 GB | Основная БД              |
+| Elasticsearch            |               3 |      12 vCPU |          48 GB | Search cluster           |
+| MinIO                    |               4 |      16 vCPU |          32 GB | Object Storage           |
+| Monitoring               |               2 |       4 vCPU |           8 GB | Prometheus + Grafana     |
+| **Итого**                | **28 серверов** | **180 vCPU** | **384 GB RAM** | -                        |
+
+---
 
 ## 11.5 Расчёт месячной стоимости
 
@@ -509,34 +527,44 @@ RAM requests
 | 1 GB RAM      |  250 ₽ |
 | 1 TB NVMe SSD | 3500 ₽ |
 
-Формула расчета:
+Формула расчёта:
+
+```text
+Стоимость =
+(vCPU × 900) +
+(GB RAM × 250) +
+(TB NVMe SSD × 3500)
 ```
-Стоимость = CPU × 900 + RAM × 250 + NVMe(TB) × 3500
-```
-Источник стоимости и формулы: [Правила тарификации для Compute Cloud](https://yandex.cloud/ru/docs/compute/pricing)
+
+Источник цен: [https://yandex.cloud/ru/docs/compute/pricing](https://yandex.cloud/ru/docs/compute/pricing)
+
+---
 
 ## Таблица стоимости
 
-| Группа серверов | CPU | RAM | Storage | Расчёт | Стоимость |
-|---|---:|---:|---|---|---:|
-| L4 LVS | 16 | 32 GB | — | 16×900 + 32×250 | 22 400 ₽ |
-| L7 NGINX | 48 | 96 GB | — | 48×900 + 96×250 | 67 200 ₽ |
-| Kubernetes Worker | 128 | 256 GB | 4×500GB NVMe (2 TB) | 128×900 + 256×250 + 2×3500 | 186 200 ₽ |
-| Kubernetes Control Plane | 12 | 24 GB | — | 12×900 + 24×250 | 16 800 ₽ |
-| PostgreSQL/PostGIS | 36 | 96 GB | 3 TB NVMe | 36×900 + 96×250 + 3×3500 | 66 900 ₽ |
-| Elasticsearch | 24 | 96 GB | 3 TB NVMe | 24×900 + 96×250 + 3×3500 | 56 100 ₽ |
-| MinIO | 32 | 64 GB | 20 TB NVMe | 32×900 + 64×250 + 20×3500 | 114 800 ₽ |
-| Monitoring | 8 | 16 GB | 1 TB NVMe | 8×900 + 16×250 + 1×3500 | 14 700 ₽ |
+| Группа серверов          | CPU |   RAM | Storage     | Расчёт                     | Стоимость |
+| ------------------------ | --: | ----: | ----------- | -------------------------- | --------: |
+| L4 LVS                   |  16 | 32 GB | —           | 16×900 + 32×250            |  22 400 ₽ |
+| L7 NGINX                 |  48 | 96 GB | —           | 48×900 + 96×250            |  67 200 ₽ |
+| Kubernetes Worker        |  48 | 96 GB | 1.5 TB NVMe | 48×900 + 96×250 + 1.5×3500 |  72 450 ₽ |
+| Kubernetes Control Plane |  12 | 24 GB | —           | 12×900 + 24×250            |  16 800 ₽ |
+| PostgreSQL/PostGIS       |  24 | 48 GB | 2 TB NVMe   | 24×900 + 48×250 + 2×3500   |  40 600 ₽ |
+| Elasticsearch            |  12 | 48 GB | 2 TB NVMe   | 12×900 + 48×250 + 2×3500   |  29 800 ₽ |
+| MinIO                    |  16 | 32 GB | 20 TB NVMe  | 16×900 + 32×250 + 20×3500  |  92 400 ₽ |
+| Monitoring               |   4 |  8 GB | 1 TB NVMe   | 4×900 + 8×250 + 1×3500     |   9 100 ₽ |
+
+---
 
 ## 11.6 Итоговая стоимость
 
-| Показатель | Значение |
-|---|---:|
-| Всего серверов | 29 |
-| Всего CPU | 304 vCPU |
-| Всего RAM | 680 GB |
-| Всего NVMe | 29 TB |
-| Месячная стоимость | ≈ 545 100 ₽ / месяц |
+| Показатель         |            Значение |
+| ------------------ | ------------------: |
+| Всего серверов     |                  28 |
+| Всего CPU          |            180 vCPU |
+| Всего RAM          |              384 GB |
+| Всего NVMe         |             26.5 TB |
+| Месячная стоимость | ≈ 350 750 ₽ / месяц |
+
 
 
 ## Сслыки на источники
