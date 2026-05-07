@@ -402,9 +402,9 @@ Erasure Coding - объект разбивается на части и хран
 | MinIO | Отдельные VM | Object Storage |
 | L4 LVS | Отдельные VM | Внешняя балансировка |
 | L7 NGINX | Отдельные VM | HTTPS termination |
-| Monitoring | VM | Prometheus + Grafana |
+| Monitoring | Отдельные VM | Prometheus + Grafana |
 
-### Выбранные российские провайдеры
+### Выбранные провайдеры
 
 | Провайдер | Использование |
 |---|---|
@@ -453,8 +453,9 @@ Erasure Coding - объект разбивается на части и хран
 | worker-1 | map-query-service, places-data-service |
 | worker-2 | auth-service, api-gateway              |
 | worker-3 | routing-service                        |
-| worker-4 | tile-render-service, metrics-exporters |
+| worker-4 | tile-render-service|
 
+ metrics-exporters лежит в каждом worker
 ## 11.3 Контейнеры Kubernetes и аллокация ресурсов
 
 requests — гарантированные ресурсы;
@@ -501,38 +502,41 @@ RAM requests
 
 
 ## 11.5 Расчёт месячной стоимости
-| Ресурс    |           Цена |
-| --------- | -------------: |
-| 1 vCPU    |  900 ₽ / месяц |
-| 1 GB RAM  |  250 ₽ / месяц |
-| 1 TB NVMe | 3500 ₽ / месяц |
+
+| Ресурс        |   Цена |
+| ------------- | -----: |
+| 1 vCPU        |  900 ₽ |
+| 1 GB RAM      |  250 ₽ |
+| 1 TB NVMe SSD | 3500 ₽ |
+
 Формула расчета:
 ```
-Стоимость = CPU × 900 + RAM × 250 + Storage
+Стоимость = CPU × 900 + RAM × 250 + NVMe(TB) × 3500
 ```
 Источник стоимости и формулы: [Правила тарификации для Compute Cloud](https://yandex.cloud/ru/docs/compute/pricing)
 
 ## Таблица стоимости
-| Группа серверов    | CPU |    RAM |        Storage | Стоимость |
-| ------------------ | --: | -----: | -------------: | --------: |
-| L4 LVS             |  16 |  32 GB |              — |  22 400 ₽ |
-| L7 NGINX           |  48 |  96 GB |              — |  67 200 ₽ |
-| Kubernetes Worker  | 128 | 256 GB |   4×500GB NVMe | 179 200 ₽ |
-| Kubernetes Master  |  12 |  24 GB |              — |  16 800 ₽ |
-| PostgreSQL/PostGIS |  36 |  96 GB |      3 TB NVMe |  64 500 ₽ |
-| Elasticsearch      |  24 |  96 GB |      3 TB NVMe |  55 200 ₽ |
-| MinIO              |  32 |  64 GB | 20 TB HDD/NVMe |  60 800 ₽ |
-| Monitoring         |   8 |  16 GB |      1 TB NVMe |  11 200 ₽ |
+
+| Группа серверов | CPU | RAM | Storage | Расчёт | Стоимость |
+|---|---:|---:|---|---|---:|
+| L4 LVS | 16 | 32 GB | — | 16×900 + 32×250 | 22 400 ₽ |
+| L7 NGINX | 48 | 96 GB | — | 48×900 + 96×250 | 67 200 ₽ |
+| Kubernetes Worker | 128 | 256 GB | 4×500GB NVMe (2 TB) | 128×900 + 256×250 + 2×3500 | 186 200 ₽ |
+| Kubernetes Control Plane | 12 | 24 GB | — | 12×900 + 24×250 | 16 800 ₽ |
+| PostgreSQL/PostGIS | 36 | 96 GB | 3 TB NVMe | 36×900 + 96×250 + 3×3500 | 66 900 ₽ |
+| Elasticsearch | 24 | 96 GB | 3 TB NVMe | 24×900 + 96×250 + 3×3500 | 56 100 ₽ |
+| MinIO | 32 | 64 GB | 20 TB NVMe | 32×900 + 64×250 + 20×3500 | 114 800 ₽ |
+| Monitoring | 8 | 16 GB | 1 TB NVMe | 8×900 + 16×250 + 1×3500 | 14 700 ₽ |
 
 ## 11.6 Итоговая стоимость
-| Показатель         |            Значение |
-| ------------------ | ------------------: |
-| Всего серверов     |                  29 |
-| Всего CPU          |            304 vCPU |
-| Всего RAM          |              680 GB |
-| Месячная стоимость | ≈ 477 300 ₽ / месяц |
 
-
+| Показатель | Значение |
+|---|---:|
+| Всего серверов | 29 |
+| Всего CPU | 304 vCPU |
+| Всего RAM | 680 GB |
+| Всего NVMe | 29 TB |
+| Месячная стоимость | ≈ 545 100 ₽ / месяц |
 
 
 ## Сслыки на источники
