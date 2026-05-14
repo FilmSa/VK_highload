@@ -343,8 +343,7 @@ RPS рассчитывается по формуле:,
 | **Mapnik**               | Backend (рендеринг тайлов)       | Основной движок рендеринга карт                                                                                                     |
 | **PostgreSQL + PostGIS** | Хранение геоданных               | Хранение дорог, зданий, организаций                                                                                                 |
 | **Go (Golang)**          | Backend                          | Высокая производительность, эффективная работа с concurrency                                                                        |
-| **MinIO (S3-compatible)** | Хранение тайлов | Распределённое объектное хранилище с поддержкой S3 API; используется как origin для CDN  |
-| **CDN**                  | Доставка тайлов                  | Раздача тайлов с edge-серверов -> снижение latency и нагрузки                                                                        |
+| **Ceph RGW (S3-compatible)** | Хранение тайлов | Распределённое объектное хранилище с поддержкой Amazon S3 API; используется как origin для CDN || **CDN**                  | Доставка тайлов                  | Раздача тайлов с edge-серверов -> снижение latency и нагрузки                                                                        |
 | **Nginx**                | L7 балансировка                  | Reverse proxy, маршрутизация `/api`, `/tiles`, кэширование                                                                          |
 | **LVS**                  | L4 балансировка                  | Быстрое распределение TCP-трафика                                                                                                   |
 | **Kubernetes**           | Оркестрация                      | Масштабирование backend-сервисов                                                                                                    |
@@ -364,12 +363,14 @@ RPS рассчитывается по формуле:,
 | **Backend сервисы** | Несколько инстансов + балансировка | Go + Kubernetes                  |
 | **PostgreSQL**      | Репликация + бэкапы (WAL)          | PostgreSQL + WAL + pg_basebackup |
 | **Elasticsearch**   | Реплики шардов                     | Elasticsearch (replica shards)   |
-| **MinIO (S3 compatible ) (тайлы)**   | N+M (избыточность через Erasure Coding)  | MinIO Distributed + Erasure Coding |
+| **Ceph RGW (тайлы)** | Репликация + Erasure Coding | Ceph Object Storage + CRUSH + Erasure Coding |
 | **Tile Render**     | Несколько инстансов                | Mapnik + Kubernetes              |
 | **Мониторинг**      | Сбор и визуализация метрик         | Prometheus + Grafana             |
 
-MinIO Distributed - данные распределяются между несколькими storage-узлами.
-Erasure Coding - объект разбивается на части и хранится с избыточностью. Даже если часть дисков или серверов выйдет из строя, данные можно восстановить.
+Ceph Object Storage распределяет объекты между несколькими storage-узлами кластера.
+CRUSH (Controlled Replication Under Scalable Hashing) - алгоритм распределения данных Ceph, который автоматически размещает объекты по разным дискам и серверам без центральной таблицы размещения.
+Erasure Coding -  механизм избыточного хранения, при котором объект разбивается на data-chunks и parity-chunks. Даже при отказе части дисков или storage-узлов данные могут быть восстановлены.
+Ceph RGW (RADOS Gateway) предоставляет S3-совместимый API для работы с объектами и используется как origin-хранилище для CDN и тайлов карты.
 
 # 10. Схема проекта
 
@@ -399,7 +400,7 @@ Erasure Coding - объект разбивается на части и хран
 | Tile Render Service | Kubernetes | Масштабирование генерации тайлов |
 | PostgreSQL/PostGIS | Отдельные VM | Stateful workload |
 | Elasticsearch | Отдельные VM | Search index |
-| MinIO | Отдельные VM | Object Storage |
+| Ceph RGW | Отдельные VM | Distributed Object Storage |
 | L4 LVS | Отдельные VM | Внешняя балансировка |
 | L7 NGINX | Отдельные VM | HTTPS termination |
 | Monitoring | Отдельные VM | Prometheus + Grafana |
@@ -443,7 +444,7 @@ Erasure Coding - объект разбивается на части и хран
 | Kubernetes Control Plane |      3 | 4 vCPU, 8 GB RAM            | Kubernetes master nodes           | Минимальный HA-кластер Kubernetes             |
 | PostgreSQL/PostGIS       |      3 | 12 vCPU, 32 GB RAM, NVMe    | PostgreSQL + PostGIS + PgBouncer  | 1 primary + 2 replica                         |
 | Elasticsearch            |      3 | 8 vCPU, 32 GB RAM, NVMe     | Elasticsearch                     | replica shards                                |
-| MinIO                    |      4 | 8 vCPU, 16 GB RAM, HDD/NVMe | MinIO Distributed                 | 2 data + 2 parity                             |
+| Ceph Storage | 4 | 8 vCPU, 16 GB RAM, HDD/NVMe | Ceph MON + OSD + RGW | Distributed object storage |
 | Monitoring               |      2 | 4 vCPU, 8 GB RAM            | Prometheus + Grafana              | monitoring + standby                          |
 
 ## Распределение сервисов по Kubernetes worker-node
@@ -513,7 +514,7 @@ RAM requests:
 | Kubernetes Control Plane |               3 |      12 vCPU |          24 GB | Kubernetes control-plane |
 | PostgreSQL/PostGIS       |               3 |      24 vCPU |          48 GB | Основная БД              |
 | Elasticsearch            |               3 |      12 vCPU |          48 GB | Search cluster           |
-| MinIO                    |               4 |      16 vCPU |          32 GB | Object Storage           |
+| Ceph Storage | 4 | 16 vCPU | 32  GB | Distributed Object Storage |
 | Monitoring               |               2 |       4 vCPU |           8 GB | Prometheus + Grafana     |
 | **Итого**                | **28 серверов** | **180 vCPU** | **384 GB RAM** | -                        |
 
@@ -550,7 +551,7 @@ RAM requests:
 | Kubernetes Control Plane |  12 | 24 GB | —           | 12×900 + 24×250            |  16 800 ₽ |
 | PostgreSQL/PostGIS       |  24 | 48 GB | 2 TB NVMe   | 24×900 + 48×250 + 2×3500   |  40 600 ₽ |
 | Elasticsearch            |  12 | 48 GB | 2 TB NVMe   | 12×900 + 48×250 + 2×3500   |  29 800 ₽ |
-| MinIO                    |  16 | 32 GB | 20 TB NVMe  | 16×900 + 32×250 + 20×3500  |  92 400 ₽ |
+| Ceph Storage | 16 | 32 GB | 20 TB NVMe | 16×900 + 32×250 + 20×3500 | 92 400 ₽ |
 | Monitoring               |   4 |  8 GB | 1 TB NVMe   | 4×900 + 8×250 + 1×3500     |   9 100 ₽ |
 
 ---
